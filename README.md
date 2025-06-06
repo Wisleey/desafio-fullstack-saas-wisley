@@ -81,23 +81,12 @@ cd desafio-fullstack-saas-[seunome]
 
 ## Versões Utilizadas
 
-- **Node.js**: `[Versão do Node.js utilizada]`
-- **React**: `[Versão do React utilizada]`
-- **Framework Backend**: `[Nome e Versão do framework backend, ex: Express v4.x]`
+- **Node.js**: `v20.17.0`
+- **React**: `18.3.1`
+- **Framework Backend**: `Express: 4.21.2`
 - **Banco de Dados**: `[Nome e Versão do banco de dados, ex: PostgreSQL v14]`
 - **ORM**: `[Nome e Versão do ORM, se utilizado, ex: Prisma v5.x, Sequelize v6.x]`
 - **Outras dependências relevantes**: `[Liste outras bibliotecas/ferramentas importantes]`
-
-_(Por favor, substitua os placeholders `[ ]` pelas versões reais utilizadas no seu projeto)._
-
-## Docker (Opcional)
-
-Se você utilizou Docker, inclua as instruções para rodar com `docker-compose` aqui e certifique-se de que o arquivo `docker-compose.yml` esteja na raiz do projeto.
-
-```bash
-# Exemplo de como rodar com Docker Compose
-docker compose up --build
-```
 
 ## Demonstração Online (Opcional)
 
@@ -181,34 +170,7 @@ npm install
 cp .env.example .env
 \`\`\`
 
-Edite o arquivo \`.env\` com suas configurações:
-
-\`\`\`env
-VITE_API_URL=http://localhost:3001/api
-VITE_APP_NAME="Task Management System"
-VITE_APP_VERSION="1.0.0"
-\`\`\`
-
-### 3. Executar a aplicação
-
-\`\`\`bash
-
-# Desenvolvimento
-
-npm run dev
-
-# Build para produção
-
-npm run build
-
-# Preview da build
-
-npm run preview
-\`\`\`
-
-A aplicação estará rodando em \`http://localhost:3000\`
-
-## 📱 Funcionalidades
+Edite o arquivo \`.env\`## 📱 Funcionalidades
 
 ### Autenticação
 
