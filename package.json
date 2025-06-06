@@ -26,14 +26,15 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "vercel-build": "node --no-warnings ./node_modules/vite/bin/vite.js build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
-  "files": [
-    "dist",
-    "node_modules/vite/bin/vite.js"
-  ],
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
   "keywords": [
     "react",
     "tailwindcss",
