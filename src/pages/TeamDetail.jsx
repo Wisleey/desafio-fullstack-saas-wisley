@@ -1,364 +1,202 @@
-"use client";
-
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Plus, UserPlus, Trash2 } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { teamService } from "../services/teamService";
+import { useParams, useNavigate } from "react-router-dom";
+import { Users, UserPlus, Trash2, Edit, FolderOpen } from "lucide-react";
+import api from "../services/api";
 import LoadingSpinner from "../components/LoadingSpinner";
-import TaskCard from "../components/TaskCard";
 import toast from "react-hot-toast";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
 
 const TeamDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [addingMember, setAddingMember] = useState(false);
-
-  const MySwal = withReactContent(Swal);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    loadTeam();
+    fetchTeamDetails();
   }, [id]);
 
-  const loadTeam = async () => {
+  const fetchTeamDetails = async () => {
     try {
       setLoading(true);
-      const response = await teamService.getTeamById(id);
-      if (response && response.data) {
-        setTeam(response.data);
-      } else {
-        console.error("Resposta vazia ou inválida ao carregar time:", response);
-        toast.error("Time não encontrado ou dados inválidos.");
-        navigate("/teams");
-      }
+      const response = await api.get(`/teams/${id}`);
+      setTeam(response.data.team);
     } catch (error) {
-      console.error("Erro ao carregar time:", error);
-      const message =
-        error.response?.status === 404
-          ? "Time não encontrado"
-          : "Erro ao carregar time";
-      toast.error(message);
-      navigate("/teams");
+      console.error("Erro ao carregar detalhes do time:", error);
+      toast.error("Erro ao carregar detalhes do time.");
     } finally {
       setLoading(false);
     }
   };
 
-  const onAddMember = async (data) => {
-    setAddingMember(true);
-    try {
-      await teamService.addMember(id, data.email);
-      toast.success("Membro adicionado com sucesso!");
-      reset();
-      setShowAddMember(false);
-      loadTeam();
-    } catch (error) {
-      console.error("Erro ao adicionar membro:", error);
-      const message =
-        error.response?.data?.message || "Erro ao adicionar membro";
-      toast.error(message);
-    } finally {
-      setAddingMember(false);
-    }
-  };
-
   const handleRemoveMember = async (memberId) => {
-    const result = await MySwal.fire({
-      title: "Remover membro?",
-      text: "Tem certeza que deseja remover este membro da equipe?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#aaa",
-      confirmButtonText: "Sim, remover",
-      cancelButtonText: "Cancelar",
-    });
-
-    if (result.isConfirmed) {
+    if (window.confirm("Tem certeza que deseja remover este membro?")) {
       try {
-        await teamService.removeMember(id, memberId);
+        await api.delete(`/teams/${id}/members/${memberId}`);
         toast.success("Membro removido com sucesso!");
-        loadTeam();
+        fetchTeamDetails();
       } catch (error) {
         console.error("Erro ao remover membro:", error);
-        toast.error("Erro ao remover membro");
+        toast.error("Erro ao remover membro.");
       }
     }
   };
 
-  const getTasksByStatus = (status) => {
-    return team?.tasks?.filter((task) => task.status === status) || [];
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "Data inválida";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "Data inválida";
-    return date.toLocaleDateString("pt-BR");
+  const handleDeleteTeam = async () => {
+    if (
+      window.confirm(
+        "Tem certeza que deseja excluir este time? Esta ação não pode ser desfeita."
+      )
+    ) {
+      try {
+        await api.delete(`/teams/${id}`);
+        toast.success("Time excluído com sucesso!");
+        navigate("/teams");
+      } catch (error) {
+        console.error("Erro ao excluir time:", error);
+        toast.error(error.response?.data?.message || "Erro ao excluir time.");
+      }
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-screen">
         <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  if (!team && !loading) {
+  if (!team) {
     return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-medium text-gray-900">
-          Time não encontrado
-        </h3>
-        <p className="text-gray-500">
-          O time que você está procurando não existe ou foi removido.
-        </p>
-        <Link to="/teams" className="btn btn-primary btn-lg mt-4">
-          Voltar para Times
-        </Link>
+      <div className="text-center mt-8 text-gray-600">
+        Não foi possível carregar os detalhes do time.
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <button
-          onClick={() => navigate("/teams")}
-          className="p-3 text-gray-400 hover:text-gray-600 transition-colors rounded-lg"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">{team.name}</h1>
-          <p className="text-gray-600">
-            Criado em {formatDate(team.createdAt)}
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">
+            {team.name}
+          </h1>
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+            <button
+              onClick={() => navigate(`/teams/${id}/edit`)}
+              className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium w-full sm:w-auto"
+            >
+              <Edit className="mr-2 h-5 w-5" />
+              Editar Time
+            </button>
+            <button
+              onClick={() => navigate(`/teams/${id}/add-member`)}
+              className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium w-full sm:w-auto"
+            >
+              <UserPlus className="mr-2 h-5 w-5" />
+              Adicionar Membro
+            </button>
+            <button
+              onClick={handleDeleteTeam}
+              className="flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium w-full sm:w-auto"
+            >
+              <Trash2 className="mr-2 h-5 w-5" />
+              Excluir Time
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">
+            Descrição
+          </h2>
+          <p className="text-gray-700">
+            {team.description || "Nenhuma descrição fornecida."}
           </p>
         </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={() => setShowAddMember(true)}
-            className="btn btn-outline btn-lg"
-          >
-            <UserPlus className="h-5 w-5 mr-2" />
-            Adicionar Membro
-          </button>
-          <Link
-            to={`/tasks/create/${team.id}`}
-            className="btn btn-primary btn-lg"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Nova Tarefa
-          </Link>
-        </div>
-      </div>
 
-      {/* Add Member Form */}
-      {showAddMember && (
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Adicionar Membro</h3>
-          </div>
-          <div className="card-content">
-            <form onSubmit={handleSubmit(onAddMember)} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Email do usuário
-                </label>
-                <input
-                  {...register("email", {
-                    required: "Email é obrigatório",
-                    pattern: {
-                      value: /^\S+@\S+$/i,
-                      message: "Email inválido",
-                    },
-                  })}
-                  type="email"
-                  className="input mt-1 w-full"
-                  placeholder="usuario@exemplo.com"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <Users className="mr-3 h-6 w-6 text-gray-600" />
+            Membros do Time ({team?.members?.length || 0})
+          </h2>
 
-              <div className="flex space-x-3 justify-end">
-                <button
-                  type="submit"
-                  disabled={addingMember}
-                  className="btn btn-primary btn-lg"
+          <div className="space-y-4">
+            {team?.members?.length > 0 ? (
+              team.members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
                 >
-                  {addingMember ? (
-                    <>
-                      <LoadingSpinner size="sm" className="mr-2" />
-                      Adicionando...
-                    </>
-                  ) : (
-                    "Adicionar"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddMember(false);
-                    reset();
-                  }}
-                  className="btn btn-outline btn-lg"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Team Info */}
-        <div className="lg:col-span-1">
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Membros do Time</h3>
-            </div>
-            <div className="card-content">
-              <div className="space-y-3">
-                {Array.isArray(team.members) &&
-                  team.members.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="h-10 w-10 bg-primary-600 rounded-full flex items-center justify-center">
-                          <span className="text-md font-medium text-white">
-                            {member.name?.charAt(0).toUpperCase() || "?"}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-md font-medium text-gray-900">
-                            {member.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {member.email}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveMember(member.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors rounded-lg"
-                        title="Remover membro"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      {member.user?.name
+                        ? member.user.name.charAt(0).toUpperCase()
+                        : "?"}
                     </div>
-                  ))}
-                {Array.isArray(team.members) && team.members.length === 0 && (
-                  <p className="text-gray-500">Nenhum membro no time ainda.</p>
-                )}
+                    <div>
+                      <p className="font-medium text-gray-800">
+                        {member.user?.name || "Nome indisponível"}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {member.user?.email || "Email indisponível"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveMember(member.user.id)}
+                    className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                    title="Remover membro"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-500">
+                Nenhum membro neste time ainda.
               </div>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="card mt-6">
-            <div className="card-header">
-              <h3 className="card-title">Estatísticas</h3>
-            </div>
-            <div className="card-content">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">
-                    Total de Tarefas
-                  </span>
-                  <span className="font-medium">{team.tasks?.length || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Pendentes</span>
-                  <span className="font-medium text-yellow-600">
-                    {getTasksByStatus("pendente").length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Em Andamento</span>
-                  <span className="font-medium text-blue-600">
-                    {getTasksByStatus("andamento").length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Concluídas</span>
-                  <span className="font-medium text-green-600">
-                    {getTasksByStatus("concluída").length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Reprovadas</span>
-                  <span className="font-medium text-red-600">
-                    {getTasksByStatus("reprovada").length}
-                  </span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Tasks */}
-        <div className="lg:col-span-2">
-          <div className="card">
-            <div className="card-header">
-              <div className="flex items-center justify-between">
-                <h3 className="card-title">Tarefas do Time</h3>
-                <Link
-                  to={`/tasks/create/${team.id}`}
-                  className="text-sm text-primary-600 hover:text-primary-700"
-                >
-                  Criar nova tarefa
-                </Link>
-              </div>
-            </div>
-            <div className="card-content">
-              {team.tasks && team.tasks.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {team.tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onUpdate={loadTeam}
-                      members={team.members}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Plus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Nenhuma tarefa criada ainda</p>
-                  <Link
-                    to={`/tasks/create/${team.id}`}
-                    className="btn btn-primary btn-md mt-4"
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <FolderOpen className="mr-3 h-6 w-6 text-gray-600" />
+            Tarefas do Time
+          </h2>
+          <div className="mt-4">
+            {team?.tasks?.length > 0 ? (
+              <ul className="space-y-3">
+                {team.tasks.map((task) => (
+                  <li
+                    key={task.id}
+                    className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm"
                   >
-                    Criar primeira tarefa
-                  </Link>
-                </div>
-              )}
-            </div>
+                    <h3 className="font-semibold text-gray-900">
+                      {task.title}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Status: {task.status}
+                    </p>
+                    {task.dueDate && (
+                      <p className="text-sm text-gray-600">
+                        Prazo: {new Date(task.dueDate).toLocaleDateString()}
+                      </p>
+                    )}
+                    {task.assignedTo && (
+                      <p className="text-sm text-gray-600">
+                        Atribuída a: {task.assignedTo.name}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-center text-gray-500">
+                Nenhuma tarefa associada a este time.
+              </div>
+            )}
           </div>
         </div>
       </div>

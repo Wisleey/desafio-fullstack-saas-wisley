@@ -1,7 +1,11 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { UserPlus, X } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { UserPlus, X, ArrowLeft } from "lucide-react";
 import api from "../services/api";
+import LoadingSpinner from "../components/LoadingSpinner";
+import toast from "react-hot-toast";
 
 const AddTeamMember = () => {
   const [email, setEmail] = useState("");
@@ -11,14 +15,22 @@ const AddTeamMember = () => {
 
   const handleAddMember = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email) {
+      toast.error("Por favor, insira o email do usuário.");
+      return;
+    }
 
     setAddingMember(true);
     try {
-      await api.post(`/teams/${id}/members`, { email: email });
-      navigate(`/teams/${id}`);
+      const response = await api.post(`/teams/${id}/members`, { email: email });
+      toast.success("Membro adicionado com sucesso!");
+      setEmail(""); // Limpa o input após sucesso
+      // navigate(`/teams/${id}`); // Pode remover este se preferir ficar na página para adicionar mais
     } catch (error) {
       console.error("Erro ao adicionar membro:", error);
+      const message =
+        error.response?.data?.message || "Erro ao adicionar membro";
+      toast.error(message);
     } finally {
       setAddingMember(false);
     }
@@ -26,51 +38,75 @@ const AddTeamMember = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Adicionar Membro ao Time
-          </h1>
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="flex items-center space-x-4 mb-6">
           <button
             onClick={() => navigate(`/teams/${id}`)}
-            className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg"
+            aria-label="Voltar"
           >
-            <X className="mr-2" />
-            Cancelar
+            <ArrowLeft className="h-6 w-6" />
           </button>
+          <h1 className="text-2xl font-bold text-gray-900">Adicionar Membro</h1>
         </div>
 
-        <form
-          onSubmit={handleAddMember}
-          className="bg-white rounded-lg shadow p-6"
-        >
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email do Usuário
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="nome@exemplo.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Adicionar membro por email</h3>
           </div>
+          <div className="card-content">
+            <form onSubmit={handleAddMember} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Email do Usuário
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="nome@exemplo.com"
+                  className="input mt-1 w-full"
+                />
+              </div>
 
-          <div className="mt-6">
-            <button
-              type="submit"
-              disabled={!email || addingMember}
-              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-            >
-              <UserPlus className="mr-2" />
-              {addingMember ? "Adicionando..." : "Adicionar Membro"}
-            </button>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={!email || addingMember}
+                  className="btn btn-primary btn-lg"
+                >
+                  {addingMember ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Adicionando...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-5 w-5 mr-2" />
+                      Adicionar Membro
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
+
+        {/* Opcional: Link para voltar */}
+        <div className="mt-6 text-center">
+          <Link
+            to={`/teams/${id}`}
+            className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            Cancelar e Voltar
+          </Link>
+        </div>
       </div>
     </div>
   );
