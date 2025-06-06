@@ -58,7 +58,7 @@ const Tasks = () => {
       const response = await taskService.getTasks(queryFilters);
       let filteredTasks = response.tasks;
 
-      // Filtro de busca do lado do cliente (Client-side search filter)
+      // Filtro de busca do lado do cliente
       if (filters.search) {
         filteredTasks = filteredTasks.filter(
           (task) =>

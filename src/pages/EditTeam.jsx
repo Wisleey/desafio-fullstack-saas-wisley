@@ -29,14 +29,14 @@ const EditTeam = () => {
       setLoading(true);
       const response = await teamService.getTeamById(id);
       if (response && response.data) {
-        reset(response.data); // Preencher formulário com dados do time
+        reset(response.data);
       } else {
         console.error(
           "Resposta vazia ou inválida ao carregar time para edição:",
           response
         );
         toast.error("Erro ao carregar dados do time para edição.");
-        navigate(`/teams/${id}`); // Voltar para detalhes se falhar
+        navigate(`/teams/${id}`);
       }
     } catch (error) {
       console.error("Erro ao carregar time para edição:", error);
@@ -45,7 +45,7 @@ const EditTeam = () => {
           ? "Time não encontrado para edição"
           : "Erro ao carregar time para edição";
       toast.error(message);
-      navigate(`/teams/${id}`); // Voltar para detalhes se falhar
+      navigate(`/teams/${id}`);
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ const EditTeam = () => {
     try {
       await teamService.updateTeam(id, data);
       toast.success("Time atualizado com sucesso!");
-      navigate(`/teams/${id}`); // Voltar para detalhes após salvar
+      navigate(`/teams/${id}`);
     } catch (error) {
       console.error("Erro ao atualizar time:", error);
       const message = error.response?.data?.message || "Erro ao atualizar time";
