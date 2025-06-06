@@ -12,6 +12,7 @@ import AddTeamMember from "./pages/AddTeamMember";
 import Tasks from "./pages/Tasks";
 import CreateTask from "./pages/CreateTask";
 import Profile from "./pages/Profile";
+import ChoosePlan from "./pages/ChoosePlan";
 import LoadingSpinner from "./components/LoadingSpinner";
 
 function App() {
@@ -51,6 +52,7 @@ function App() {
         <Route path="tasks" element={<Tasks />} />
         <Route path="tasks/create" element={<CreateTask />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="choose-plan" element={<ChoosePlan />} />
       </Route>
 
       {/* Catch all route */}
