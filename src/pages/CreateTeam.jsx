@@ -27,7 +27,7 @@ const CreateTeam = () => {
 
     try {
       await api.post("/teams", formData);
-      navigate("/teams"); // Redirecionar para a lista de times após criar
+      navigate("/teams");
     } catch (error) {
       console.error("Erro ao criar time:", error);
     } finally {
